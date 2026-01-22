@@ -16,7 +16,30 @@ import type {
   Lesson,
   ParticipantCompetency,
   LearningRecord,
-  BehaviorIndicator
+  BehaviorIndicator,
+  LearningPath,
+  InsertLearningPath,
+  Enrollment,
+  Quiz,
+  QuizAttempt,
+  InsertQuiz,
+  Question,
+  Certificate,
+  InsertCertificate,
+  Assessor,
+  InsertAssessor,
+  Assessee,
+  InsertAssessee,
+  LSPOrganization,
+  CompetencyScheme,
+  InsertScheme,
+  AssessmentSchedule,
+  InsertSchedule,
+  PortfolioItem,
+  InsertPortfolio,
+  CertificationResult,
+  Badge,
+  Achievement
 } from "@shared/schema";
 
 // Sample data imports (replicated from client for server use)
@@ -318,6 +341,75 @@ export interface IStorage {
   // Dashboard
   getDashboardStats(): Promise<DashboardStats>;
   getHeatmapData(): Promise<HeatmapData[]>;
+
+  // LMS - Learning Paths
+  getLearningPaths(): Promise<LearningPath[]>;
+  getLearningPath(id: string): Promise<LearningPath | undefined>;
+  createLearningPath(data: InsertLearningPath): Promise<LearningPath>;
+  updateLearningPath(id: string, data: Partial<InsertLearningPath>): Promise<LearningPath | undefined>;
+  deleteLearningPath(id: string): Promise<boolean>;
+
+  // LMS - Enrollments
+  getEnrollments(): Promise<Enrollment[]>;
+  getEnrollmentsByParticipant(participantId: string): Promise<Enrollment[]>;
+  createEnrollment(participantId: string, courseId?: string, learningPathId?: string): Promise<Enrollment>;
+  updateEnrollmentProgress(id: string, progress: number, status?: Enrollment['status']): Promise<Enrollment | undefined>;
+
+  // LMS - Quizzes
+  getQuizzes(): Promise<Quiz[]>;
+  getQuiz(id: string): Promise<Quiz | undefined>;
+  getQuizzesByCourse(courseId: string): Promise<Quiz[]>;
+  createQuiz(data: InsertQuiz & { questions: Question[] }): Promise<Quiz>;
+  deleteQuiz(id: string): Promise<boolean>;
+
+  // LMS - Quiz Attempts
+  getQuizAttempts(quizId: string): Promise<QuizAttempt[]>;
+  getQuizAttemptsByParticipant(participantId: string): Promise<QuizAttempt[]>;
+  createQuizAttempt(attempt: Omit<QuizAttempt, 'id'>): Promise<QuizAttempt>;
+
+  // LMS - Certificates
+  getCertificates(): Promise<Certificate[]>;
+  getCertificate(id: string): Promise<Certificate | undefined>;
+  getCertificatesByParticipant(participantId: string): Promise<Certificate[]>;
+  createCertificate(data: InsertCertificate): Promise<Certificate>;
+  verifyCertificate(certificateNumber: string): Promise<Certificate | undefined>;
+
+  // LSP - Assessors
+  getAssessors(): Promise<Assessor[]>;
+  getAssessor(id: string): Promise<Assessor | undefined>;
+  createAssessor(data: InsertAssessor): Promise<Assessor>;
+  updateAssessor(id: string, data: Partial<InsertAssessor>): Promise<Assessor | undefined>;
+  deleteAssessor(id: string): Promise<boolean>;
+
+  // LSP - Assessees
+  getAssessees(): Promise<Assessee[]>;
+  getAssessee(id: string): Promise<Assessee | undefined>;
+  createAssessee(data: InsertAssessee): Promise<Assessee>;
+  updateAssesseeStatus(id: string, status: Assessee['status']): Promise<Assessee | undefined>;
+
+  // LSP - Schemes
+  getSchemes(): Promise<CompetencyScheme[]>;
+  getScheme(id: string): Promise<CompetencyScheme | undefined>;
+  createScheme(data: InsertScheme): Promise<CompetencyScheme>;
+  
+  // LSP - Schedules
+  getSchedules(): Promise<AssessmentSchedule[]>;
+  getSchedule(id: string): Promise<AssessmentSchedule | undefined>;
+  createSchedule(data: InsertSchedule): Promise<AssessmentSchedule>;
+  updateScheduleStatus(id: string, status: AssessmentSchedule['status']): Promise<AssessmentSchedule | undefined>;
+
+  // LSP - Portfolio
+  getPortfolioItems(assesseeId: string): Promise<PortfolioItem[]>;
+  createPortfolioItem(data: InsertPortfolio): Promise<PortfolioItem>;
+  updatePortfolioStatus(id: string, status: PortfolioItem['status'], feedback?: string): Promise<PortfolioItem | undefined>;
+
+  // LSP - Certification Results
+  getCertificationResults(): Promise<CertificationResult[]>;
+  createCertificationResult(result: Omit<CertificationResult, 'id'>): Promise<CertificationResult>;
+
+  // LSP - Organizations
+  getLSPOrganizations(): Promise<LSPOrganization[]>;
+  getLSPOrganization(id: string): Promise<LSPOrganization | undefined>;
 }
 
 export class MemStorage implements IStorage {
@@ -325,12 +417,100 @@ export class MemStorage implements IStorage {
   private units: Map<string, UnitCompetency>;
   private courses: Map<string, ECourse>;
   private participants: Map<string, Participant>;
+  private learningPaths: Map<string, LearningPath>;
+  private enrollments: Map<string, Enrollment>;
+  private quizzes: Map<string, Quiz>;
+  private quizAttempts: Map<string, QuizAttempt>;
+  private certificates: Map<string, Certificate>;
+  private assessors: Map<string, Assessor>;
+  private assessees: Map<string, Assessee>;
+  private schemes: Map<string, CompetencyScheme>;
+  private schedules: Map<string, AssessmentSchedule>;
+  private portfolioItems: Map<string, PortfolioItem>;
+  private certificationResults: Map<string, CertificationResult>;
+  private lspOrganizations: Map<string, LSPOrganization>;
 
   constructor() {
     this.clusters = new Map(competencyClusters.map(c => [c.id, c]));
     this.units = new Map([...smapUnits, ...pancekUnits].map(u => [u.id, u]));
     this.courses = new Map(initialCourses.map(c => [c.id, c]));
     this.participants = new Map(initialParticipants.map(p => [p.id, p]));
+    this.learningPaths = new Map();
+    this.enrollments = new Map();
+    this.quizzes = new Map();
+    this.quizAttempts = new Map();
+    this.certificates = new Map();
+    this.assessors = new Map();
+    this.assessees = new Map();
+    this.schemes = new Map();
+    this.schedules = new Map();
+    this.portfolioItems = new Map();
+    this.certificationResults = new Map();
+    this.lspOrganizations = new Map();
+    
+    this.initializeSampleLMSData();
+  }
+
+  private initializeSampleLMSData() {
+    const sampleLSP: LSPOrganization = {
+      id: "lsp-001",
+      name: "LSP Training Indonesia",
+      licenseNumber: "BNSP-LSP-2024-001",
+      address: "Jakarta, Indonesia",
+      phone: "+62-21-12345678",
+      email: "info@lsp-training.id",
+      competencySchemes: [],
+      status: "active",
+      validUntil: "2027-12-31",
+      createdAt: "2024-01-01"
+    };
+    this.lspOrganizations.set(sampleLSP.id, sampleLSP);
+
+    const sampleScheme: CompetencyScheme = {
+      id: "scheme-001",
+      lspId: "lsp-001",
+      code: "SKM-SMAP-01",
+      name: "Skema Sertifikasi Manajer Strategis",
+      description: "Sertifikasi untuk kompetensi manajemen strategis dan analisis",
+      skkniCode: "SKKNI-2024-001",
+      unitIds: ["smap-01", "smap-02", "smap-03", "smap-04"],
+      assessmentMethods: ["written_test", "portfolio", "oral_interview", "observation"],
+      duration: "2 hari",
+      fee: 2500000,
+      isActive: true
+    };
+    this.schemes.set(sampleScheme.id, sampleScheme);
+
+    const sampleAssessor: Assessor = {
+      id: "assessor-001",
+      registrationNumber: "NRA-2024-0001",
+      name: "Dr. Ahmad Wijaya",
+      email: "ahmad.wijaya@lsp.id",
+      phone: "+62-812-3456789",
+      lspId: "lsp-001",
+      competencySchemes: ["scheme-001"],
+      specializations: ["Strategic Management", "Leadership"],
+      status: "active",
+      validUntil: "2026-12-31",
+      totalAssessments: 45,
+      createdAt: "2024-01-15"
+    };
+    this.assessors.set(sampleAssessor.id, sampleAssessor);
+
+    const samplePath: LearningPath = {
+      id: "path-001",
+      title: "Jalur Manajer Strategis",
+      description: "Jalur pembelajaran lengkap untuk menjadi manajer strategis yang kompeten",
+      targetRole: "Strategic Manager",
+      duration: "3 bulan",
+      difficulty: "advanced",
+      courseIds: ["course-smap01-l2", "course-pan03-l2"],
+      prerequisites: [],
+      skills: ["Strategic Analysis", "Decision Making", "Problem Solving"],
+      isPublished: true,
+      createdAt: "2025-01-01"
+    };
+    this.learningPaths.set(samplePath.id, samplePath);
   }
 
   // Clusters
@@ -642,6 +822,377 @@ export class MemStorage implements IStorage {
         total: competencies.length
       };
     });
+  }
+
+  // LMS - Learning Paths
+  async getLearningPaths(): Promise<LearningPath[]> {
+    return Array.from(this.learningPaths.values());
+  }
+
+  async getLearningPath(id: string): Promise<LearningPath | undefined> {
+    return this.learningPaths.get(id);
+  }
+
+  async createLearningPath(data: InsertLearningPath): Promise<LearningPath> {
+    const id = `path-${randomUUID()}`;
+    const path: LearningPath = {
+      id,
+      title: data.title,
+      description: data.description,
+      targetRole: data.targetRole,
+      duration: data.duration,
+      difficulty: data.difficulty,
+      courseIds: data.courseIds || [],
+      prerequisites: data.prerequisites || [],
+      skills: data.skills || [],
+      isPublished: false,
+      createdAt: new Date().toISOString().split('T')[0]
+    };
+    this.learningPaths.set(id, path);
+    return path;
+  }
+
+  async updateLearningPath(id: string, data: Partial<InsertLearningPath>): Promise<LearningPath | undefined> {
+    const path = this.learningPaths.get(id);
+    if (!path) return undefined;
+    const updated = { ...path, ...data };
+    this.learningPaths.set(id, updated);
+    return updated;
+  }
+
+  async deleteLearningPath(id: string): Promise<boolean> {
+    return this.learningPaths.delete(id);
+  }
+
+  // LMS - Enrollments
+  async getEnrollments(): Promise<Enrollment[]> {
+    return Array.from(this.enrollments.values());
+  }
+
+  async getEnrollmentsByParticipant(participantId: string): Promise<Enrollment[]> {
+    return Array.from(this.enrollments.values()).filter(e => e.participantId === participantId);
+  }
+
+  async createEnrollment(participantId: string, courseId?: string, learningPathId?: string): Promise<Enrollment> {
+    const id = `enroll-${randomUUID()}`;
+    const enrollment: Enrollment = {
+      id,
+      participantId,
+      courseId,
+      learningPathId,
+      enrolledAt: new Date().toISOString(),
+      progress: 0,
+      status: "enrolled"
+    };
+    this.enrollments.set(id, enrollment);
+    return enrollment;
+  }
+
+  async updateEnrollmentProgress(id: string, progress: number, status?: Enrollment['status']): Promise<Enrollment | undefined> {
+    const enrollment = this.enrollments.get(id);
+    if (!enrollment) return undefined;
+    enrollment.progress = progress;
+    if (status) enrollment.status = status;
+    if (progress > 0 && !enrollment.startedAt) {
+      enrollment.startedAt = new Date().toISOString();
+    }
+    if (progress >= 100) {
+      enrollment.completedAt = new Date().toISOString();
+      enrollment.status = "completed";
+    }
+    enrollment.lastAccessedAt = new Date().toISOString();
+    this.enrollments.set(id, enrollment);
+    return enrollment;
+  }
+
+  // LMS - Quizzes
+  async getQuizzes(): Promise<Quiz[]> {
+    return Array.from(this.quizzes.values());
+  }
+
+  async getQuiz(id: string): Promise<Quiz | undefined> {
+    return this.quizzes.get(id);
+  }
+
+  async getQuizzesByCourse(courseId: string): Promise<Quiz[]> {
+    return Array.from(this.quizzes.values()).filter(q => q.courseId === courseId);
+  }
+
+  async createQuiz(data: InsertQuiz & { questions: Question[] }): Promise<Quiz> {
+    const id = `quiz-${randomUUID()}`;
+    const quiz: Quiz = {
+      id,
+      courseId: data.courseId,
+      lessonId: data.lessonId,
+      title: data.title,
+      description: data.description,
+      passingScore: data.passingScore ?? 70,
+      timeLimit: data.timeLimit,
+      maxAttempts: data.maxAttempts ?? 3,
+      shuffleQuestions: data.shuffleQuestions ?? false,
+      showResults: data.showResults ?? true,
+      questions: data.questions,
+      createdAt: new Date().toISOString().split('T')[0]
+    };
+    this.quizzes.set(id, quiz);
+    return quiz;
+  }
+
+  async deleteQuiz(id: string): Promise<boolean> {
+    return this.quizzes.delete(id);
+  }
+
+  // LMS - Quiz Attempts
+  async getQuizAttempts(quizId: string): Promise<QuizAttempt[]> {
+    return Array.from(this.quizAttempts.values()).filter(a => a.quizId === quizId);
+  }
+
+  async getQuizAttemptsByParticipant(participantId: string): Promise<QuizAttempt[]> {
+    return Array.from(this.quizAttempts.values()).filter(a => a.participantId === participantId);
+  }
+
+  async createQuizAttempt(attempt: Omit<QuizAttempt, 'id'>): Promise<QuizAttempt> {
+    const id = `attempt-${randomUUID()}`;
+    const newAttempt: QuizAttempt = { id, ...attempt };
+    this.quizAttempts.set(id, newAttempt);
+    return newAttempt;
+  }
+
+  // LMS - Certificates
+  async getCertificates(): Promise<Certificate[]> {
+    return Array.from(this.certificates.values());
+  }
+
+  async getCertificate(id: string): Promise<Certificate | undefined> {
+    return this.certificates.get(id);
+  }
+
+  async getCertificatesByParticipant(participantId: string): Promise<Certificate[]> {
+    return Array.from(this.certificates.values()).filter(c => c.participantId === participantId);
+  }
+
+  async createCertificate(data: InsertCertificate): Promise<Certificate> {
+    const id = `cert-${randomUUID()}`;
+    const certNumber = `CERT-${Date.now().toString(36).toUpperCase()}-${randomUUID().slice(0, 8).toUpperCase()}`;
+    const certificate: Certificate = {
+      id,
+      participantId: data.participantId,
+      courseId: data.courseId,
+      learningPathId: data.learningPathId,
+      assessmentId: data.assessmentId,
+      title: data.title,
+      description: data.description,
+      certificateNumber: certNumber,
+      issuedAt: new Date().toISOString(),
+      status: "active",
+      verificationUrl: `/verify/${certNumber}`,
+      metadata: {}
+    };
+    this.certificates.set(id, certificate);
+    return certificate;
+  }
+
+  async verifyCertificate(certificateNumber: string): Promise<Certificate | undefined> {
+    return Array.from(this.certificates.values()).find(c => c.certificateNumber === certificateNumber);
+  }
+
+  // LSP - Assessors
+  async getAssessors(): Promise<Assessor[]> {
+    return Array.from(this.assessors.values());
+  }
+
+  async getAssessor(id: string): Promise<Assessor | undefined> {
+    return this.assessors.get(id);
+  }
+
+  async createAssessor(data: InsertAssessor): Promise<Assessor> {
+    const id = `assessor-${randomUUID()}`;
+    const assessor: Assessor = {
+      id,
+      registrationNumber: data.registrationNumber,
+      name: data.name,
+      email: data.email,
+      phone: data.phone,
+      lspId: data.lspId,
+      competencySchemes: data.competencySchemes || [],
+      specializations: data.specializations || [],
+      status: "active",
+      validUntil: data.validUntil,
+      totalAssessments: 0,
+      createdAt: new Date().toISOString().split('T')[0]
+    };
+    this.assessors.set(id, assessor);
+    return assessor;
+  }
+
+  async updateAssessor(id: string, data: Partial<InsertAssessor>): Promise<Assessor | undefined> {
+    const assessor = this.assessors.get(id);
+    if (!assessor) return undefined;
+    const updated = { ...assessor, ...data };
+    this.assessors.set(id, updated);
+    return updated;
+  }
+
+  async deleteAssessor(id: string): Promise<boolean> {
+    return this.assessors.delete(id);
+  }
+
+  // LSP - Assessees
+  async getAssessees(): Promise<Assessee[]> {
+    return Array.from(this.assessees.values());
+  }
+
+  async getAssessee(id: string): Promise<Assessee | undefined> {
+    return this.assessees.get(id);
+  }
+
+  async createAssessee(data: InsertAssessee): Promise<Assessee> {
+    const id = `assessee-${randomUUID()}`;
+    const assessee: Assessee = {
+      id,
+      participantId: data.participantId,
+      nik: data.nik,
+      birthPlace: data.birthPlace,
+      birthDate: data.birthDate,
+      gender: data.gender,
+      education: data.education,
+      workExperience: data.workExperience,
+      currentCompany: data.currentCompany,
+      currentPosition: data.currentPosition,
+      schemeId: data.schemeId,
+      registrationDate: new Date().toISOString().split('T')[0],
+      status: "registered"
+    };
+    this.assessees.set(id, assessee);
+    return assessee;
+  }
+
+  async updateAssesseeStatus(id: string, status: Assessee['status']): Promise<Assessee | undefined> {
+    const assessee = this.assessees.get(id);
+    if (!assessee) return undefined;
+    assessee.status = status;
+    this.assessees.set(id, assessee);
+    return assessee;
+  }
+
+  // LSP - Schemes
+  async getSchemes(): Promise<CompetencyScheme[]> {
+    return Array.from(this.schemes.values());
+  }
+
+  async getScheme(id: string): Promise<CompetencyScheme | undefined> {
+    return this.schemes.get(id);
+  }
+
+  async createScheme(data: InsertScheme): Promise<CompetencyScheme> {
+    const id = `scheme-${randomUUID()}`;
+    const scheme: CompetencyScheme = {
+      id,
+      lspId: data.lspId,
+      code: data.code,
+      name: data.name,
+      description: data.description,
+      skkniCode: data.skkniCode,
+      unitIds: data.unitIds || [],
+      assessmentMethods: data.assessmentMethods,
+      duration: data.duration,
+      fee: data.fee,
+      isActive: true
+    };
+    this.schemes.set(id, scheme);
+    return scheme;
+  }
+
+  // LSP - Schedules
+  async getSchedules(): Promise<AssessmentSchedule[]> {
+    return Array.from(this.schedules.values());
+  }
+
+  async getSchedule(id: string): Promise<AssessmentSchedule | undefined> {
+    return this.schedules.get(id);
+  }
+
+  async createSchedule(data: InsertSchedule): Promise<AssessmentSchedule> {
+    const id = `schedule-${randomUUID()}`;
+    const schedule: AssessmentSchedule = {
+      id,
+      schemeId: data.schemeId,
+      assesseeId: data.assesseeId,
+      assessorId: data.assessorId,
+      scheduledDate: data.scheduledDate,
+      location: data.location,
+      locationType: data.locationType,
+      methods: data.methods,
+      duration: data.duration,
+      status: "scheduled",
+      notes: data.notes,
+      createdAt: new Date().toISOString()
+    };
+    this.schedules.set(id, schedule);
+    return schedule;
+  }
+
+  async updateScheduleStatus(id: string, status: AssessmentSchedule['status']): Promise<AssessmentSchedule | undefined> {
+    const schedule = this.schedules.get(id);
+    if (!schedule) return undefined;
+    schedule.status = status;
+    this.schedules.set(id, schedule);
+    return schedule;
+  }
+
+  // LSP - Portfolio
+  async getPortfolioItems(assesseeId: string): Promise<PortfolioItem[]> {
+    return Array.from(this.portfolioItems.values()).filter(p => p.assesseeId === assesseeId);
+  }
+
+  async createPortfolioItem(data: InsertPortfolio): Promise<PortfolioItem> {
+    const id = `portfolio-${randomUUID()}`;
+    const item: PortfolioItem = {
+      id,
+      assesseeId: data.assesseeId,
+      unitId: data.unitId,
+      elementId: data.elementId,
+      type: data.type,
+      title: data.title,
+      description: data.description,
+      issuedDate: data.issuedDate,
+      issuedBy: data.issuedBy,
+      submittedAt: new Date().toISOString(),
+      status: "submitted"
+    };
+    this.portfolioItems.set(id, item);
+    return item;
+  }
+
+  async updatePortfolioStatus(id: string, status: PortfolioItem['status'], feedback?: string): Promise<PortfolioItem | undefined> {
+    const item = this.portfolioItems.get(id);
+    if (!item) return undefined;
+    item.status = status;
+    if (feedback) item.feedback = feedback;
+    item.reviewedAt = new Date().toISOString();
+    this.portfolioItems.set(id, item);
+    return item;
+  }
+
+  // LSP - Certification Results
+  async getCertificationResults(): Promise<CertificationResult[]> {
+    return Array.from(this.certificationResults.values());
+  }
+
+  async createCertificationResult(result: Omit<CertificationResult, 'id'>): Promise<CertificationResult> {
+    const id = `result-${randomUUID()}`;
+    const newResult: CertificationResult = { id, ...result };
+    this.certificationResults.set(id, newResult);
+    return newResult;
+  }
+
+  // LSP - Organizations
+  async getLSPOrganizations(): Promise<LSPOrganization[]> {
+    return Array.from(this.lspOrganizations.values());
+  }
+
+  async getLSPOrganization(id: string): Promise<LSPOrganization | undefined> {
+    return this.lspOrganizations.get(id);
   }
 }
 
