@@ -11,9 +11,12 @@ import type {
   InsertParticipant,
   InsertEvidence,
   InsertCourse,
+  InsertCluster,
+  InsertUnit,
   Lesson,
   ParticipantCompetency,
-  LearningRecord
+  LearningRecord,
+  BehaviorIndicator
 } from "@shared/schema";
 
 // Sample data imports (replicated from client for server use)
@@ -282,11 +285,17 @@ export interface IStorage {
   // Clusters
   getClusters(): Promise<CompetencyCluster[]>;
   getCluster(id: string): Promise<CompetencyCluster | undefined>;
+  createCluster(data: InsertCluster): Promise<CompetencyCluster>;
+  updateCluster(id: string, data: Partial<InsertCluster>): Promise<CompetencyCluster | undefined>;
+  deleteCluster(id: string): Promise<boolean>;
   
   // Units
   getUnits(): Promise<UnitCompetency[]>;
   getUnit(id: string): Promise<UnitCompetency | undefined>;
   getUnitsByCluster(clusterId: string): Promise<UnitCompetency[]>;
+  createUnit(data: InsertUnit): Promise<UnitCompetency>;
+  updateUnit(id: string, data: Partial<InsertUnit>): Promise<UnitCompetency | undefined>;
+  deleteUnit(id: string): Promise<boolean>;
   
   // Courses
   getCourses(): Promise<ECourse[]>;
@@ -333,6 +342,46 @@ export class MemStorage implements IStorage {
     return this.clusters.get(id);
   }
 
+  async createCluster(data: InsertCluster): Promise<CompetencyCluster> {
+    const id = `cluster-${randomUUID()}`;
+    const cluster: CompetencyCluster = {
+      id,
+      code: data.code.toUpperCase(),
+      name: data.name,
+      fullName: data.fullName,
+      description: data.description,
+      color: data.color
+    };
+    this.clusters.set(id, cluster);
+    return cluster;
+  }
+
+  async updateCluster(id: string, data: Partial<InsertCluster>): Promise<CompetencyCluster | undefined> {
+    const cluster = this.clusters.get(id);
+    if (!cluster) return undefined;
+    
+    const updated: CompetencyCluster = {
+      ...cluster,
+      ...(data.code && { code: data.code.toUpperCase() }),
+      ...(data.name && { name: data.name }),
+      ...(data.fullName && { fullName: data.fullName }),
+      ...(data.description && { description: data.description }),
+      ...(data.color && { color: data.color })
+    };
+    this.clusters.set(id, updated);
+    return updated;
+  }
+
+  async deleteCluster(id: string): Promise<boolean> {
+    if (!this.clusters.has(id)) return false;
+    // Also delete associated units
+    const unitsToDelete = Array.from(this.units.values()).filter(u => u.clusterId === id);
+    for (const unit of unitsToDelete) {
+      this.units.delete(unit.id);
+    }
+    return this.clusters.delete(id);
+  }
+
   // Units
   async getUnits(): Promise<UnitCompetency[]> {
     return Array.from(this.units.values());
@@ -344,6 +393,48 @@ export class MemStorage implements IStorage {
 
   async getUnitsByCluster(clusterId: string): Promise<UnitCompetency[]> {
     return Array.from(this.units.values()).filter(u => u.clusterId === clusterId);
+  }
+
+  async createUnit(data: InsertUnit): Promise<UnitCompetency> {
+    const id = `unit-${randomUUID()}`;
+    const defaultIndicators: BehaviorIndicator[] = data.indicators || [
+      { level: "L1", indicators: ["Indikator L1 belum didefinisikan"] },
+      { level: "L2", indicators: ["Indikator L2 belum didefinisikan"] },
+      { level: "L3", indicators: ["Indikator L3 belum didefinisikan"] },
+      { level: "L4", indicators: ["Indikator L4 belum didefinisikan"] }
+    ];
+    
+    const unit: UnitCompetency = {
+      id,
+      clusterId: data.clusterId,
+      code: data.code.toUpperCase(),
+      name: data.name,
+      description: data.description,
+      indicators: defaultIndicators
+    };
+    this.units.set(id, unit);
+    return unit;
+  }
+
+  async updateUnit(id: string, data: Partial<InsertUnit>): Promise<UnitCompetency | undefined> {
+    const unit = this.units.get(id);
+    if (!unit) return undefined;
+    
+    const updated: UnitCompetency = {
+      ...unit,
+      ...(data.clusterId && { clusterId: data.clusterId }),
+      ...(data.code && { code: data.code.toUpperCase() }),
+      ...(data.name && { name: data.name }),
+      ...(data.description && { description: data.description }),
+      ...(data.indicators && { indicators: data.indicators })
+    };
+    this.units.set(id, updated);
+    return updated;
+  }
+
+  async deleteUnit(id: string): Promise<boolean> {
+    if (!this.units.has(id)) return false;
+    return this.units.delete(id);
   }
 
   // Courses

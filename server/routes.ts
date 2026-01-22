@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertParticipantSchema, insertEvidenceSchema, insertCourseSchema } from "@shared/schema";
+import { insertParticipantSchema, insertEvidenceSchema, insertCourseSchema, insertClusterSchema, insertUnitSchema } from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(
@@ -31,6 +31,43 @@ export async function registerRoutes(
     }
   });
 
+  app.post("/api/clusters", async (req, res) => {
+    try {
+      const data = insertClusterSchema.parse(req.body);
+      const cluster = await storage.createCluster(data);
+      res.status(201).json(cluster);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create cluster" });
+    }
+  });
+
+  app.patch("/api/clusters/:id", async (req, res) => {
+    try {
+      const cluster = await storage.updateCluster(req.params.id, req.body);
+      if (!cluster) {
+        return res.status(404).json({ message: "Cluster not found" });
+      }
+      res.json(cluster);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update cluster" });
+    }
+  });
+
+  app.delete("/api/clusters/:id", async (req, res) => {
+    try {
+      const success = await storage.deleteCluster(req.params.id);
+      if (!success) {
+        return res.status(404).json({ message: "Cluster not found" });
+      }
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete cluster" });
+    }
+  });
+
   // ============ UNITS ============
   app.get("/api/units", async (req, res) => {
     try {
@@ -55,6 +92,43 @@ export async function registerRoutes(
       res.json(unit);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch unit" });
+    }
+  });
+
+  app.post("/api/units", async (req, res) => {
+    try {
+      const data = insertUnitSchema.parse(req.body);
+      const unit = await storage.createUnit(data);
+      res.status(201).json(unit);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create unit" });
+    }
+  });
+
+  app.patch("/api/units/:id", async (req, res) => {
+    try {
+      const unit = await storage.updateUnit(req.params.id, req.body);
+      if (!unit) {
+        return res.status(404).json({ message: "Unit not found" });
+      }
+      res.json(unit);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update unit" });
+    }
+  });
+
+  app.delete("/api/units/:id", async (req, res) => {
+    try {
+      const success = await storage.deleteUnit(req.params.id);
+      if (!success) {
+        return res.status(404).json({ message: "Unit not found" });
+      }
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete unit" });
     }
   });
 

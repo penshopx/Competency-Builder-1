@@ -27,18 +27,40 @@ export const CompetencyLevelDescriptions: Record<CompetencyLevelType, string> = 
   L4: "Mengarahkan & membina"
 };
 
-// Cluster types
-export type ClusterType = "SMAP" | "PANCEK";
-
-// Competency Cluster
+// Competency Cluster - Generic (not limited to specific types)
 export interface CompetencyCluster {
   id: string;
-  code: ClusterType;
+  code: string;
   name: string;
   fullName: string;
   description: string;
   color: string;
 }
+
+// Insert schema for cluster
+export const insertClusterSchema = z.object({
+  code: z.string().min(1, "Kode cluster wajib diisi").max(10, "Kode maksimal 10 karakter"),
+  name: z.string().min(1, "Nama cluster wajib diisi"),
+  fullName: z.string().min(1, "Nama lengkap wajib diisi"),
+  description: z.string().min(1, "Deskripsi wajib diisi"),
+  color: z.string().min(1, "Warna wajib diisi")
+});
+
+export type InsertCluster = z.infer<typeof insertClusterSchema>;
+
+// Insert schema for unit competency
+export const insertUnitSchema = z.object({
+  clusterId: z.string().min(1, "Cluster wajib dipilih"),
+  code: z.string().min(1, "Kode unit wajib diisi"),
+  name: z.string().min(1, "Nama unit wajib diisi"),
+  description: z.string().min(1, "Deskripsi wajib diisi"),
+  indicators: z.array(z.object({
+    level: z.enum(["L1", "L2", "L3", "L4"]),
+    indicators: z.array(z.string())
+  })).optional()
+});
+
+export type InsertUnit = z.infer<typeof insertUnitSchema>;
 
 // Unit Competency
 export interface UnitCompetency {
@@ -168,7 +190,7 @@ export interface DashboardStats {
 export interface CompetencyGap {
   unitId: string;
   unitName: string;
-  clusterCode: ClusterType;
+  clusterCode: string;
   gapCount: number;
   avgCurrentLevel: number;
   avgTargetLevel: number;
@@ -185,7 +207,7 @@ export interface HeatmapData {
   unitId: string;
   unitCode: string;
   unitName: string;
-  clusterCode: ClusterType;
+  clusterCode: string;
   l1Count: number;
   l2Count: number;
   l3Count: number;
