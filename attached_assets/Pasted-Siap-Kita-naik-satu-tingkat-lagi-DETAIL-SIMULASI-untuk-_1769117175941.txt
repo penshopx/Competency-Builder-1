@@ -1,0 +1,258 @@
+Siap. Kita **naik satu tingkat lagi**:
+👉 **DETAIL + SIMULASI untuk klaster STRATEGIS (SMAP)**
+Ini penting karena biasanya **bottleneck organisasi ada di level analisis & keputusan**, bukan eksekusi.
+
+Aku akan lakukan **hal yang sama persis seperti PANCEK**, tapi untuk **SMAP level Manager**.
+
+---
+
+# BAGIAN 3️⃣
+
+## DETAIL LEVEL STRATEGIS
+
+### Unit Kompetensi: **SMAP-01 – Analisis Masalah Strategis**
+
+---
+
+## A. Identitas Unit Kompetensi
+
+| Elemen       | Isi                                                                      |
+| ------------ | ------------------------------------------------------------------------ |
+| Klaster      | SMAP                                                                     |
+| Kode         | SMAP-01                                                                  |
+| Nama         | Analisis Masalah Strategis                                               |
+| Target Level | **L3 – Mastery**                                                         |
+| Sasaran      | Supervisor senior / Manager                                              |
+| Outcome      | Mampu menganalisis masalah strategis & memberi rekomendasi berbasis data |
+
+---
+
+## B. Standar Kompetensi (L3 – Mastery)
+
+Peserta dinyatakan **kompeten L3** jika mampu:
+
+* Memilah masalah strategis vs operasional
+* Menggunakan multi-analisis (data, proses, dampak)
+* Menyusun rekomendasi yang *actionable*
+* Menjelaskan implikasi keputusan
+
+📌 **Bukan sekadar “analisis bagus”, tapi “berdampak ke arah organisasi”**
+
+---
+
+## C. Indikator Perilaku (Observable & Assessable)
+
+| Kode | Indikator                               |
+| ---- | --------------------------------------- |
+| IS-1 | Mengidentifikasi isu strategis utama    |
+| IS-2 | Menggunakan data & framework            |
+| IS-3 | Mensintesis akar masalah                |
+| IS-4 | Memberi rekomendasi strategis           |
+| IS-5 | Mengkomunikasikan analisis dengan jelas |
+
+---
+
+## D. Struktur E-Course (Lesson by Lesson)
+
+---
+
+### 🧠 Lesson 1 — Strategic Mindset Orientation
+
+**Tujuan:** Mengubah pola pikir “problem solver operasional” → “strategic thinker”
+
+Konten:
+
+* Video 7 menit: *Busy vs Strategic*
+* Contoh kasus gagal analisis strategis
+
+Output:
+
+* Peserta paham beda L2 vs L3
+
+---
+
+### 🧠 Lesson 2 — Strategic Context Case
+
+**Studi Kasus Nyata:**
+
+> Kinerja unit stagnan, KPI tercapai, tapi customer churn naik.
+
+Tugas:
+
+* Tentukan: masalah operasional atau strategis?
+* Jelaskan alasannya
+
+---
+
+### 🧠 Lesson 3 — Strategic Analysis Toolkit
+
+**Micro Learning:**
+
+* Strategic issue identification
+* Data triangulation
+* Framework:
+
+  * SWOT (strategic use)
+  * Fishbone (systemic)
+  * Trend vs anomaly analysis
+
+⏱️ ±30 menit
+
+---
+
+### 🧠 Lesson 4 — Strategic Practice (CORE)
+
+**Real Strategic Assignment:**
+Peserta WAJIB:
+
+1. Ambil **1 isu strategis unit kerja**
+2. Lakukan:
+
+   * Analisis data
+   * Identifikasi akar sistemik
+   * Dampak jangka menengah
+3. Susun rekomendasi strategis
+
+📌 Ini **bukan simulasi**, ini **kerja manajerial nyata**.
+
+---
+
+### 🧠 Lesson 5 — Asesmen (Panel-Based)
+
+**Metode:**
+
+* Review dokumen
+* Presentasi 10 menit
+* Tanya jawab assessor
+
+**Evidensi:**
+
+* Policy brief / strategic paper (5–7 halaman)
+* Slide ringkas
+
+---
+
+### 🧠 Lesson 6 — Strategic Reflection
+
+Pertanyaan refleksi:
+
+* Jika rekomendasi ini diambil, apa risikonya?
+* Apa alternatif terbaik kedua?
+
+---
+
+## E. Rubrik Asesmen (SMAP-01 L3)
+
+| Indikator        | L2           | L3 (Kompeten)     | L4               |
+| ---------------- | ------------ | ----------------- | ---------------- |
+| Identifikasi isu | Parsial      | Tepat & prioritas | Visioner         |
+| Analisis         | Satu sudut   | Multi-sudut       | Sistemik         |
+| Data             | Deskriptif   | Insightful        | Predictive       |
+| Rekomendasi      | Umum         | Actionable        | Transformasional |
+| Komunikasi       | Kurang jelas | Jelas & logis     | Menggerakkan     |
+
+➡️ **Lulus jika mayoritas indikator di L3**
+
+---
+
+# BAGIAN 4️⃣
+
+## SIMULASI STRATEGIC IMPLEMENTATION & DASHBOARD
+
+---
+
+## A. Simulasi Peserta (Level Manager)
+
+**Jumlah:** 10 Manager
+**Unit:** Operasional & Support
+
+### Assessment Awal
+
+| Level | Jumlah |
+| ----- | ------ |
+| L2    | 6      |
+| L3    | 3      |
+| L4    | 1      |
+
+➡️ Fokus: **L2 → L3**
+
+---
+
+## B. Learning & Practice Assignment
+
+| Level | Intervensi          |
+| ----- | ------------------- |
+| L2    | E-Course SMAP-01 L3 |
+| L3    | Strategic mentoring |
+| L4    | Strategic council   |
+
+---
+
+## C. Hasil Asesmen (Simulasi)
+
+| Status     | Jumlah |
+| ---------- | ------ |
+| Naik ke L3 | 4      |
+| Tetap L2   | 2      |
+| L3 stabil  | 3      |
+| L4         | 1      |
+
+➡️ **40% managerial uplift** (sangat tinggi untuk level strategis)
+
+---
+
+## D. Dashboard Strategis (Simulasi)
+
+### 🔥 Heatmap SMAP
+
+```
+SMAP-01  ████░  ↑
+SMAP-02  ███░░
+SMAP-03  ██░░░
+SMAP-04  ██░░░
+```
+
+---
+
+## E. Insight Pimpinan (KRITIS)
+
+Dari sistem terlihat:
+
+* 2 manager **kuat operasional, lemah strategis**
+* 1 manager **siap succession**
+* 1 isu strategis **muncul berulang lintas unit**
+
+📌 Insight ini **tidak bisa didapat dari rapat biasa**.
+
+---
+
+## F. Dampak Nyata (Simulasi 6 Bulan)
+
+* Keputusan reaktif ↓ 30%
+* Waktu eskalasi isu ↓ 25%
+* Konsistensi arah unit ↑ signifikan
+
+---
+
+# 🏁 STATUS SAAT INI
+
+✔ PANCEK (eksekusi level staf)
+✔ SMAP (strategi level manager)
+✔ Lesson detail
+✔ Asesmen panel
+✔ Dashboard & insight
+
+👉 **Ini sudah level enterprise-ready**
+
+---
+
+## 🔥 PILIHAN TERAKHIR (ADVANCED)
+
+Kalau mau kita naik *kelas dunia*, aku bisa lanjutkan ke:
+
+1️⃣ **SMAP L4 – Strategic Leadership (Direksi level)**
+2️⃣ **AI-driven competency recommendation (logic & rules)**
+3️⃣ **Mockup dashboard visual (siap demo)**
+4️⃣ **Model sertifikasi internal & eksternal alignment**
+
+Tinggal bilang **nomor berapa** atau **“lanjut sampai level direksi”** 🚀
