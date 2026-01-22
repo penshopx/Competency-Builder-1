@@ -8,7 +8,8 @@ import {
   GraduationCap,
   Route,
   ClipboardCheck,
-  FileCheck
+  FileCheck,
+  FileQuestion
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import {
@@ -44,6 +45,11 @@ const mainMenu = [
     title: "Jalur Pembelajaran",
     url: "/app/learning-paths",
     icon: Route,
+  },
+  {
+    title: "Quiz Engine",
+    url: "/app/quizzes",
+    icon: FileQuestion,
   },
 ];
 

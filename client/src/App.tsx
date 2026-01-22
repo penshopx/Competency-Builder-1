@@ -16,6 +16,7 @@ import Passport from "@/pages/passport";
 import LearningPaths from "@/pages/learning-paths";
 import Assessment from "@/pages/assessment";
 import Certificates from "@/pages/certificates";
+import Quizzes from "@/pages/quizzes";
 
 function AppRouter() {
   return (
@@ -24,6 +25,7 @@ function AppRouter() {
       <Route path="/app/competencies" component={Competencies} />
       <Route path="/app/courses" component={Courses} />
       <Route path="/app/learning-paths" component={LearningPaths} />
+      <Route path="/app/quizzes" component={Quizzes} />
       <Route path="/app/participants" component={Participants} />
       <Route path="/app/passport" component={Passport} />
       <Route path="/app/assessment" component={Assessment} />
