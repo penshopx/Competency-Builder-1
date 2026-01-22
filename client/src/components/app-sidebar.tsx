@@ -5,7 +5,10 @@ import {
   Award,
   FolderOpen,
   Settings,
-  GraduationCap
+  GraduationCap,
+  Route,
+  ClipboardCheck,
+  FileCheck
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import {
@@ -37,6 +40,11 @@ const mainMenu = [
     url: "/app/courses",
     icon: BookOpen,
   },
+  {
+    title: "Jalur Pembelajaran",
+    url: "/app/learning-paths",
+    icon: Route,
+  },
 ];
 
 const managementMenu = [
@@ -49,6 +57,19 @@ const managementMenu = [
     title: "Competency Passport",
     url: "/app/passport",
     icon: Award,
+  },
+];
+
+const certificationMenu = [
+  {
+    title: "Asesmen & LSP",
+    url: "/app/assessment",
+    icon: ClipboardCheck,
+  },
+  {
+    title: "Sertifikat",
+    url: "/app/certificates",
+    icon: FileCheck,
   },
 ];
 
@@ -99,6 +120,28 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {managementMenu.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton 
+                    asChild 
+                    isActive={location === item.url}
+                    data-testid={`nav-${item.url.replace("/", "")}`}
+                  >
+                    <Link href={item.url}>
+                      <item.icon className="h-4 w-4" />
+                      <span>{item.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>Sertifikasi LSP</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {certificationMenu.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton 
                     asChild 
