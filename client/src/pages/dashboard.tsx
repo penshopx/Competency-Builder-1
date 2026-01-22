@@ -2,7 +2,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "wouter";
 import { 
   Users, 
   BookOpen, 
@@ -10,13 +12,18 @@ import {
   Target,
   AlertTriangle,
   CheckCircle,
-  BarChart3
+  BarChart3,
+  Route,
+  FileQuestion,
+  Award,
+  ClipboardCheck,
+  ArrowRight
 } from "lucide-react";
 import { 
   getLevelColor,
   CompetencyLevelNames
 } from "@/lib/data";
-import type { DashboardStats, HeatmapData, CompetencyCluster, CompetencyLevelType } from "@shared/schema";
+import type { DashboardStats, HeatmapData, CompetencyCluster, CompetencyLevelType, LearningPath, Quiz, Certificate } from "@shared/schema";
 
 function StatCard({ 
   title, 
@@ -105,6 +112,18 @@ export default function Dashboard() {
 
   const { data: clusters } = useQuery<CompetencyCluster[]>({
     queryKey: ['/api/clusters']
+  });
+
+  const { data: learningPaths, isLoading: learningPathsLoading } = useQuery<LearningPath[]>({
+    queryKey: ['/api/learning-paths']
+  });
+
+  const { data: quizzes, isLoading: quizzesLoading } = useQuery<Quiz[]>({
+    queryKey: ['/api/quizzes']
+  });
+
+  const { data: certificates, isLoading: certificatesLoading } = useQuery<Certificate[]>({
+    queryKey: ['/api/certificates']
   });
 
   const maxCount = heatmapData ? Math.max(...heatmapData.map(h => Math.max(h.l1Count, h.l2Count, h.l3Count, h.l4Count))) : 0;
@@ -336,6 +355,88 @@ export default function Dashboard() {
                 </div>
               </div>
             ))}
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-4">
+        <Card className="hover-elevate" data-testid="card-quick-learning-paths">
+          <CardHeader className="flex flex-row items-center justify-between gap-2 pb-2">
+            <div className="h-10 w-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
+              <Route className="h-5 w-5 text-blue-500" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            {learningPathsLoading ? (
+              <Skeleton className="h-8 w-12 mb-1" />
+            ) : (
+              <div className="text-2xl font-bold">{learningPaths?.length || 0}</div>
+            )}
+            <p className="text-sm text-muted-foreground">Jalur Pembelajaran</p>
+            <Link href="/app/learning-paths">
+              <Button variant="ghost" className="p-0 h-auto mt-2" data-testid="link-learning-paths">
+                Lihat Semua <ArrowRight className="h-4 w-4 ml-1" />
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+
+        <Card className="hover-elevate" data-testid="card-quick-quizzes">
+          <CardHeader className="flex flex-row items-center justify-between gap-2 pb-2">
+            <div className="h-10 w-10 rounded-lg bg-amber-500/10 flex items-center justify-center">
+              <FileQuestion className="h-5 w-5 text-amber-500" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            {quizzesLoading ? (
+              <Skeleton className="h-8 w-12 mb-1" />
+            ) : (
+              <div className="text-2xl font-bold">{quizzes?.length || 0}</div>
+            )}
+            <p className="text-sm text-muted-foreground">Kuis Tersedia</p>
+            <Link href="/app/quizzes">
+              <Button variant="ghost" className="p-0 h-auto mt-2" data-testid="link-quizzes">
+                Kelola Kuis <ArrowRight className="h-4 w-4 ml-1" />
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+
+        <Card className="hover-elevate" data-testid="card-quick-assessment">
+          <CardHeader className="flex flex-row items-center justify-between gap-2 pb-2">
+            <div className="h-10 w-10 rounded-lg bg-teal-500/10 flex items-center justify-center">
+              <ClipboardCheck className="h-5 w-5 text-teal-500" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">LSP</div>
+            <p className="text-sm text-muted-foreground">Sertifikasi Profesi</p>
+            <Link href="/app/assessment">
+              <Button variant="ghost" className="p-0 h-auto mt-2" data-testid="link-assessment">
+                Kelola Asesmen <ArrowRight className="h-4 w-4 ml-1" />
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+
+        <Card className="hover-elevate" data-testid="card-quick-certificates">
+          <CardHeader className="flex flex-row items-center justify-between gap-2 pb-2">
+            <div className="h-10 w-10 rounded-lg bg-purple-500/10 flex items-center justify-center">
+              <Award className="h-5 w-5 text-purple-500" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            {certificatesLoading ? (
+              <Skeleton className="h-8 w-12 mb-1" />
+            ) : (
+              <div className="text-2xl font-bold">{certificates?.length || 0}</div>
+            )}
+            <p className="text-sm text-muted-foreground">Sertifikat Diterbitkan</p>
+            <Link href="/app/certificates">
+              <Button variant="ghost" className="p-0 h-auto mt-2" data-testid="link-certificates">
+                Kelola Sertifikat <ArrowRight className="h-4 w-4 ml-1" />
+              </Button>
+            </Link>
           </CardContent>
         </Card>
       </div>

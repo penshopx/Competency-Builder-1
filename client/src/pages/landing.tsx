@@ -18,7 +18,12 @@ import {
   Edit3,
   MessageCircle,
   Layers,
-  Sparkles
+  Sparkles,
+  Route,
+  FileQuestion,
+  ClipboardCheck,
+  FileCheck,
+  Shield
 } from "lucide-react";
 
 const features = [
@@ -38,7 +43,40 @@ const features = [
     description: "Template standar: Orientasi, Konteks, Microlearning, Praktik, Asesmen, Refleksi"
   },
   {
+    icon: Route,
+    title: "Jalur Pembelajaran",
+    description: "Learning paths dengan prerequisite dan progress tracking otomatis"
+  },
+  {
+    icon: FileQuestion,
+    title: "Quiz Engine",
+    description: "Kuis dengan berbagai tipe soal: pilihan ganda, benar/salah, dan esai"
+  },
+  {
     icon: Award,
+    title: "Sertifikat Digital",
+    description: "Generate dan verifikasi sertifikat dengan kode unik dan QR code"
+  }
+];
+
+const lspFeatures = [
+  {
+    icon: Shield,
+    title: "LSP Terintegrasi",
+    description: "Dukung proses sertifikasi SKK dengan standar BNSP dan SKKNI mapping"
+  },
+  {
+    icon: ClipboardCheck,
+    title: "Asesmen Komprehensif",
+    description: "6 metode asesmen: APL, Observasi, Wawancara, Tes Tertulis, Portfolio, Simulasi"
+  },
+  {
+    icon: Users,
+    title: "Manajemen Asesor",
+    description: "Kelola asesor dengan NRA (Nomor Registrasi Asesor) dan sertifikasi BNSP"
+  },
+  {
+    icon: FileCheck,
     title: "Competency Passport",
     description: "Dokumentasi kompetensi lengkap untuk keputusan pengembangan talenta"
   },
@@ -48,9 +86,9 @@ const features = [
     description: "Heatmap visualisasi dan tracking progress peserta secara real-time"
   },
   {
-    icon: Users,
-    title: "Manajemen Peserta",
-    description: "Kelola peserta, track evidensi, dan pantau perkembangan kompetensi"
+    icon: Target,
+    title: "SKKNI Mapping",
+    description: "Petakan kompetensi ke standar SKKNI untuk persiapan ujian SKK"
   }
 ];
 
@@ -152,7 +190,7 @@ export default function Landing() {
       <section className="py-16 md:py-24">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">Fitur Lengkap</h2>
+            <h2 className="text-3xl font-bold mb-4">Fitur LMS Lengkap</h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
               Semua yang Anda butuhkan untuk membangun ekosistem pembelajaran berbasis kompetensi
             </p>
@@ -163,6 +201,34 @@ export default function Landing() {
                 <CardHeader>
                   <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center mb-2">
                     <feature.icon className="h-5 w-5 text-primary" />
+                  </div>
+                  <CardTitle className="text-lg">{feature.title}</CardTitle>
+                  <CardDescription>{feature.description}</CardDescription>
+                </CardHeader>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="py-16 md:py-24 bg-gradient-to-br from-teal-50 to-blue-50 dark:from-teal-950/30 dark:to-blue-950/30">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <Badge variant="secondary" className="mb-4">
+              <Shield className="h-3 w-3 mr-1" />
+              Sertifikasi LSP
+            </Badge>
+            <h2 className="text-3xl font-bold mb-4">Dukung Sertifikasi Profesi</h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              Platform terintegrasi untuk persiapan dan pelaksanaan sertifikasi SKK (Sertifikasi Kompetensi Kerja) berbasis SKKNI
+            </p>
+          </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {lspFeatures.map((feature) => (
+              <Card key={feature.title} className="hover-elevate border-teal-200 dark:border-teal-800" data-testid={`card-lsp-${feature.title.toLowerCase().replace(/\s+/g, '-')}`}>
+                <CardHeader>
+                  <div className="h-10 w-10 rounded-lg bg-teal-500/10 flex items-center justify-center mb-2">
+                    <feature.icon className="h-5 w-5 text-teal-600 dark:text-teal-400" />
                   </div>
                   <CardTitle className="text-lg">{feature.title}</CardTitle>
                   <CardDescription>{feature.description}</CardDescription>

@@ -38,6 +38,22 @@ interface LocalQuestion {
   order: number;
 }
 
+function transformQuestions(questions: unknown): LocalQuestion[] {
+  if (!Array.isArray(questions)) return [];
+  return questions.map((q: Record<string, unknown>, index: number) => ({
+    id: String(q.id || `q-${index}`),
+    type: (["multiple_choice", "true_false", "essay"].includes(String(q.type)) 
+      ? String(q.type) : "multiple_choice") as LocalQuestionType,
+    text: String(q.text || ""),
+    options: Array.isArray(q.options) 
+      ? q.options.map((o: unknown) => typeof o === "object" && o !== null && "text" in o ? String((o as {text: string}).text) : String(o))
+      : [],
+    correctAnswer: String(q.correctAnswer || ""),
+    points: typeof q.points === "number" ? q.points : 10,
+    order: typeof q.order === "number" ? q.order : index
+  }));
+}
+
 export default function Quizzes() {
   const { toast } = useToast();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -150,7 +166,7 @@ export default function Quizzes() {
     let score = 0;
     let total = 0;
     
-    const questions = quiz.questions as unknown as LocalQuestion[];
+    const questions = transformQuestions(quiz.questions);
     questions.forEach((q) => {
       total += q.points;
       const userAnswer = userAnswers[q.id];
@@ -187,7 +203,7 @@ export default function Quizzes() {
   }
 
   if (isTakingQuiz && selectedQuiz) {
-    const questions = selectedQuiz.questions as unknown as LocalQuestion[];
+    const questions = transformQuestions(selectedQuiz.questions);
     const currentQ = questions[currentQuestionIndex];
 
     if (!currentQ) {
@@ -585,7 +601,7 @@ export default function Quizzes() {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {quizzes.map((quiz) => {
             const course = courses.find(c => c.id === quiz.courseId);
-            const questions = quiz.questions as unknown as LocalQuestion[];
+            const questions = transformQuestions(quiz.questions);
             
             return (
               <Card key={quiz.id} className="hover-elevate" data-testid={`card-quiz-${quiz.id}`}>
