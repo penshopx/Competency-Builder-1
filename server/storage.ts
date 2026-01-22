@@ -651,6 +651,8 @@ export class MemStorage implements IStorage {
       description: data.description,
       duration: data.duration,
       lessons: defaultLessons,
+      preTestId: data.preTestId,
+      postTestId: data.postTestId,
       createdAt: new Date().toISOString().split('T')[0]
     };
 

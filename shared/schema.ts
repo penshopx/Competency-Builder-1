@@ -87,6 +87,8 @@ export interface ECourse {
   description: string;
   duration: string;
   lessons: Lesson[];
+  preTestId?: string;
+  postTestId?: string;
   createdAt: string;
 }
 
@@ -240,7 +242,9 @@ export const insertCourseSchema = z.object({
   targetLevel: z.enum(["L1", "L2", "L3", "L4"]),
   title: z.string().min(1, "Judul kursus wajib diisi"),
   description: z.string().min(1, "Deskripsi wajib diisi"),
-  duration: z.string().min(1, "Durasi wajib diisi")
+  duration: z.string().min(1, "Durasi wajib diisi"),
+  preTestId: z.string().optional(),
+  postTestId: z.string().optional()
 });
 
 export type InsertCourse = z.infer<typeof insertCourseSchema>;

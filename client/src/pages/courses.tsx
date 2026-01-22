@@ -26,13 +26,15 @@ import {
   CheckCircle,
   MessageCircle,
   ChevronRight,
-  GraduationCap
+  GraduationCap,
+  FileQuestion,
+  ClipboardCheck
 } from "lucide-react";
 import { 
   getLevelColor,
   getLessonTypeLabel,
 } from "@/lib/data";
-import type { ECourse, UnitCompetency, CompetencyLevelType, InsertCourse } from "@shared/schema";
+import type { ECourse, UnitCompetency, CompetencyLevelType, InsertCourse, Quiz } from "@shared/schema";
 
 const lessonTypeIcons: Record<string, React.ElementType> = {
   orientation: Compass,
@@ -48,8 +50,10 @@ function LessonTypeIcon({ type }: { type: string }) {
   return <Icon className="h-4 w-4" />;
 }
 
-function CourseCard({ course, units }: { course: ECourse; units?: UnitCompetency[] }) {
+function CourseCard({ course, units, quizzes }: { course: ECourse; units?: UnitCompetency[]; quizzes?: Quiz[] }) {
   const unit = units?.find(u => u.id === course.unitId);
+  const preTest = quizzes?.find(q => q.id === course.preTestId);
+  const postTest = quizzes?.find(q => q.id === course.postTestId);
   
   return (
     <Card className="hover-elevate" data-testid={`course-card-${course.id}`}>
@@ -80,6 +84,26 @@ function CourseCard({ course, units }: { course: ECourse; units?: UnitCompetency
             <span>{course.lessons.length} Lesson</span>
           </div>
         </div>
+
+        {(preTest || postTest) && (
+          <>
+            <Separator className="my-4" />
+            <div className="flex flex-wrap gap-2">
+              {preTest && (
+                <Badge variant="secondary" className="text-xs" data-testid={`badge-pretest-${course.id}`}>
+                  <FileQuestion className="h-3 w-3 mr-1" />
+                  Pre-Test
+                </Badge>
+              )}
+              {postTest && (
+                <Badge variant="secondary" className="text-xs" data-testid={`badge-posttest-${course.id}`}>
+                  <ClipboardCheck className="h-3 w-3 mr-1" />
+                  Post-Test
+                </Badge>
+              )}
+            </div>
+          </>
+        )}
         
         <Separator className="my-4" />
         
@@ -294,14 +318,16 @@ function CourseBuilderTemplate({ onStartBuild }: { onStartBuild?: () => void }) 
   );
 }
 
-function CreateCourseForm({ units, onClose }: { units?: UnitCompetency[]; onClose: () => void }) {
+function CreateCourseForm({ units, quizzes, onClose }: { units?: UnitCompetency[]; quizzes?: Quiz[]; onClose: () => void }) {
   const { toast } = useToast();
   const [formData, setFormData] = useState({
     unitId: "",
     targetLevel: "L2" as CompetencyLevelType,
     title: "",
     description: "",
-    duration: ""
+    duration: "",
+    preTestId: "",
+    postTestId: ""
   });
 
   const createMutation = useMutation({
@@ -324,7 +350,12 @@ function CreateCourseForm({ units, onClose }: { units?: UnitCompetency[]; onClos
       toast({ title: "Error", description: "Lengkapi semua field", variant: "destructive" });
       return;
     }
-    createMutation.mutate(formData);
+    const submitData = {
+      ...formData,
+      preTestId: formData.preTestId || undefined,
+      postTestId: formData.postTestId || undefined
+    };
+    createMutation.mutate(submitData);
   };
 
   return (
@@ -400,6 +431,48 @@ function CreateCourseForm({ units, onClose }: { units?: UnitCompetency[]; onClos
 
       <Separator />
 
+      <div className="space-y-2">
+        <Label htmlFor="pretest">Pre-Test (Opsional)</Label>
+        <Select value={formData.preTestId} onValueChange={(v) => setFormData(prev => ({ ...prev, preTestId: v }))}>
+          <SelectTrigger id="pretest" data-testid="select-pretest">
+            <SelectValue placeholder="Pilih kuis untuk pre-test" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="">Tidak ada pre-test</SelectItem>
+            {quizzes?.map((quiz) => (
+              <SelectItem key={quiz.id} value={quiz.id}>
+                {quiz.title}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <p className="text-xs text-muted-foreground">
+          Pre-test digunakan untuk mengukur pengetahuan awal peserta sebelum memulai kursus
+        </p>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="posttest">Post-Test (Opsional)</Label>
+        <Select value={formData.postTestId} onValueChange={(v) => setFormData(prev => ({ ...prev, postTestId: v }))}>
+          <SelectTrigger id="posttest" data-testid="select-posttest">
+            <SelectValue placeholder="Pilih kuis untuk post-test" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="">Tidak ada post-test</SelectItem>
+            {quizzes?.map((quiz) => (
+              <SelectItem key={quiz.id} value={quiz.id}>
+                {quiz.title}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <p className="text-xs text-muted-foreground">
+          Post-test digunakan untuk mengukur peningkatan pengetahuan setelah menyelesaikan kursus
+        </p>
+      </div>
+
+      <Separator />
+
       <div className="flex justify-end gap-2">
         <Button variant="outline" onClick={onClose} data-testid="button-cancel">
           Batal
@@ -448,6 +521,10 @@ export default function Courses() {
     queryKey: ['/api/units']
   });
 
+  const { data: quizzes } = useQuery<Quiz[]>({
+    queryKey: ['/api/quizzes']
+  });
+
   return (
     <div className="p-6 space-y-6" data-testid="page-courses">
       <div className="flex items-start justify-between gap-4">
@@ -469,7 +546,7 @@ export default function Courses() {
                 Buat kursus baru berdasarkan unit kompetensi
               </DialogDescription>
             </DialogHeader>
-            <CreateCourseForm units={units} onClose={() => setShowCreateForm(false)} />
+            <CreateCourseForm units={units} quizzes={quizzes} onClose={() => setShowCreateForm(false)} />
           </DialogContent>
         </Dialog>
       </div>
@@ -488,7 +565,7 @@ export default function Courses() {
           ) : courses && courses.length > 0 ? (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {courses.map((course) => (
-                <CourseCard key={course.id} course={course} units={units} />
+                <CourseCard key={course.id} course={course} units={units} quizzes={quizzes} />
               ))}
             </div>
           ) : (
