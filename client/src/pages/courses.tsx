@@ -166,7 +166,37 @@ function CourseCard({ course, units }: { course: ECourse; units?: UnitCompetency
   );
 }
 
-function CourseBuilderTemplate() {
+const templateSteps = [
+  { type: "orientation", title: "Orientasi Kompetensi", desc: "Deskripsi standar & indikator perilaku", placeholder: "Jelaskan standar kompetensi, indikator perilaku, dan kriteria keberhasilan..." },
+  { type: "context", title: "Konteks Dunia Nyata", desc: "Studi kasus & tantangan kerja aktual", placeholder: "Tambahkan studi kasus nyata, skenario kerja, atau tantangan yang relevan..." },
+  { type: "microlearning", title: "Micro Learning", desc: "Video, artikel, simulasi (5-10 menit)", placeholder: "Masukkan link video, artikel, atau konten pembelajaran singkat..." },
+  { type: "practice", title: "Aktivitas Praktik", desc: "Tugas berbasis pekerjaan nyata", placeholder: "Jelaskan tugas praktik yang harus dikerjakan peserta..." },
+  { type: "assessment", title: "Asesmen", desc: "Project, studi kasus, observasi", placeholder: "Tentukan metode asesmen: project, studi kasus, atau observasi..." },
+  { type: "reflection", title: "Evidensi & Refleksi", desc: "Dokumentasi & portofolio kompetensi", placeholder: "Jelaskan jenis evidensi dan format refleksi yang diperlukan..." }
+];
+
+function CourseBuilderTemplate({ onStartBuild }: { onStartBuild?: () => void }) {
+  const [selectedStep, setSelectedStep] = useState<typeof templateSteps[0] | null>(null);
+  const [stepContent, setStepContent] = useState<Record<string, string>>({});
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [currentContent, setCurrentContent] = useState("");
+
+  const handleStepClick = (step: typeof templateSteps[0]) => {
+    setSelectedStep(step);
+    setCurrentContent(stepContent[step.type] || "");
+    setDialogOpen(true);
+  };
+
+  const handleSaveStep = () => {
+    if (selectedStep) {
+      setStepContent(prev => ({ ...prev, [selectedStep.type]: currentContent }));
+    }
+    setDialogOpen(false);
+    setSelectedStep(null);
+  };
+
+  const completedSteps = Object.keys(stepContent).filter(k => stepContent[k]?.trim()).length;
+
   return (
     <Card data-testid="card-course-template">
       <CardHeader>
@@ -175,38 +205,91 @@ function CourseBuilderTemplate() {
           Template E-Course Builder
         </CardTitle>
         <CardDescription>
-          Struktur standar untuk membangun e-course berbasis kompetensi
+          Klik setiap langkah untuk menambahkan konten. {completedSteps}/6 langkah selesai.
         </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
-          {[
-            { type: "orientation", title: "Orientasi Kompetensi", desc: "Deskripsi standar & indikator perilaku" },
-            { type: "context", title: "Konteks Dunia Nyata", desc: "Studi kasus & tantangan kerja aktual" },
-            { type: "microlearning", title: "Micro Learning", desc: "Video, artikel, simulasi (5-10 menit)" },
-            { type: "practice", title: "Aktivitas Praktik", desc: "Tugas berbasis pekerjaan nyata" },
-            { type: "assessment", title: "Asesmen", desc: "Project, studi kasus, observasi" },
-            { type: "reflection", title: "Evidensi & Refleksi", desc: "Dokumentasi & portofolio kompetensi" }
-          ].map((item, index) => (
-            <div 
-              key={item.type}
-              className="flex items-center gap-3 p-3 rounded-lg border border-border"
-            >
-              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-medium">
-                {index + 1}
-              </div>
-              <div className="flex items-center gap-2 flex-1">
-                <LessonTypeIcon type={item.type} />
-                <div>
-                  <p className="font-medium text-sm">{item.title}</p>
-                  <p className="text-xs text-muted-foreground">{item.desc}</p>
+          {templateSteps.map((item, index) => {
+            const isCompleted = stepContent[item.type]?.trim();
+            return (
+              <button 
+                key={item.type}
+                onClick={() => handleStepClick(item)}
+                className="w-full flex items-center gap-3 p-3 rounded-lg border border-border hover-elevate active-elevate-2 text-left transition-colors"
+                data-testid={`button-step-${item.type}`}
+              >
+                <div className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-medium ${
+                  isCompleted 
+                    ? "bg-green-500 text-white" 
+                    : "bg-primary text-primary-foreground"
+                }`}>
+                  {isCompleted ? <CheckCircle className="h-4 w-4" /> : index + 1}
                 </div>
-              </div>
-              <ChevronRight className="h-4 w-4 text-muted-foreground" />
-            </div>
-          ))}
+                <div className="flex items-center gap-2 flex-1">
+                  <LessonTypeIcon type={item.type} />
+                  <div>
+                    <p className="font-medium text-sm">{item.title}</p>
+                    <p className="text-xs text-muted-foreground">{item.desc}</p>
+                  </div>
+                </div>
+                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+              </button>
+            );
+          })}
         </div>
+        
+        {completedSteps > 0 && (
+          <div className="mt-4 pt-4 border-t">
+            <Button 
+              onClick={onStartBuild} 
+              className="w-full"
+              disabled={completedSteps < 6}
+              data-testid="button-generate-course"
+            >
+              <GraduationCap className="h-4 w-4 mr-2" />
+              {completedSteps < 6 ? `Selesaikan ${6 - completedSteps} langkah lagi` : "Buat E-Course dari Template"}
+            </Button>
+          </div>
+        )}
       </CardContent>
+
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              {selectedStep && <LessonTypeIcon type={selectedStep.type} />}
+              {selectedStep?.title}
+            </DialogTitle>
+            <DialogDescription>
+              {selectedStep?.desc}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="step-content">Konten Lesson</Label>
+              <Textarea
+                id="step-content"
+                placeholder={selectedStep?.placeholder}
+                value={currentContent}
+                onChange={(e) => setCurrentContent(e.target.value)}
+                rows={6}
+                className="resize-none"
+                data-testid="textarea-step-content"
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setDialogOpen(false)} data-testid="button-cancel-step">
+                Batal
+              </Button>
+              <Button onClick={handleSaveStep} data-testid="button-save-step">
+                <CheckCircle className="h-4 w-4 mr-1" />
+                Simpan
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }
@@ -431,7 +514,7 @@ export default function Courses() {
 
         <TabsContent value="template" className="mt-6">
           <div className="grid gap-6 lg:grid-cols-2">
-            <CourseBuilderTemplate />
+            <CourseBuilderTemplate onStartBuild={() => setShowCreateForm(true)} />
             
             <Card data-testid="card-principles">
               <CardHeader>
