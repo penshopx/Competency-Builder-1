@@ -10,17 +10,34 @@ Key features:
 - **4-Level Progression**: L1 (Awareness) → L2 (Application) → L3 (Mastery) → L4 (Strategic)
 - **Evidence-based Assessment**: Track and document competency evidence
 - **Competency Passport**: Generate competency documentation for talent decisions
-- **Dashboard Analytics**: Heatmap visualization of participant progress
-- **Landing Page**: Public landing page at `/` with full app at `/app`
+- **Dashboard Analytics**: Heatmap visualization of participant progress with quick access cards
+- **Landing Page**: Public landing page at `/` with LMS and LSP feature showcase
+
+**LMS Features (New):**
+- **Learning Paths**: Create learning paths with prerequisites, difficulty levels, and progress tracking
+- **Quiz Engine**: Multiple question types (pilihan ganda, benar/salah, esai) with scoring
+- **Certificates**: Digital certificate issuance with verification codes
+
+**LSP Certification Features (New):**
+- **Assessor Management**: Register assessors with NRA (Nomor Registrasi Asesor) and BNSP certification
+- **Assessee Management**: Track assessee registration and assessment status
+- **Assessment Methods**: 6 methods - APL, Observasi, Wawancara, Tes Tertulis, Portfolio, Simulasi
+- **Competency Schemes**: SKK certification schemes with fees and durations
+- **SKKNI Mapping**: Map competencies to Indonesian national standards
+- **Assessment Scheduling**: Schedule and track assessment sessions
 
 ## Routes
 
-- `/` - Landing page (public)
-- `/app` - Dashboard (main application)
+- `/` - Landing page (public) with LMS and LSP feature showcase
+- `/app` - Dashboard with competency analytics and quick access cards
 - `/app/competencies` - Competency cluster and unit management
-- `/app/courses` - E-Course Builder with template
+- `/app/courses` - E-Course Builder with 6-step template
+- `/app/learning-paths` - Learning paths with enrollment and progress tracking
+- `/app/quizzes` - Quiz Engine with multiple question types (pilihan ganda, benar/salah, esai)
 - `/app/participants` - Participant management
 - `/app/passport` - Competency Passport
+- `/app/assessment` - LSP Assessment with Assessor, Assessee, Schedule, and Scheme management
+- `/app/certificates` - Certificate issuance and verification with unique codes
 
 ## User Preferences
 
