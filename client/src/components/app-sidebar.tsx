@@ -24,17 +24,17 @@ import {
 const mainMenu = [
   {
     title: "Dashboard",
-    url: "/",
+    url: "/app",
     icon: LayoutDashboard,
   },
   {
     title: "Kompetensi",
-    url: "/competencies",
+    url: "/app/competencies",
     icon: FolderOpen,
   },
   {
     title: "E-Course Builder",
-    url: "/courses",
+    url: "/app/courses",
     icon: BookOpen,
   },
 ];
@@ -42,12 +42,12 @@ const mainMenu = [
 const managementMenu = [
   {
     title: "Peserta",
-    url: "/participants",
+    url: "/app/participants",
     icon: Users,
   },
   {
     title: "Competency Passport",
-    url: "/passport",
+    url: "/app/passport",
     icon: Award,
   },
 ];
@@ -120,7 +120,7 @@ export function AppSidebar() {
       <SidebarFooter className="p-4 border-t border-sidebar-border">
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <Settings className="h-3 w-3" />
-          <span>SMAP & PANCEK v1.0</span>
+          <span>E-Course Builder v1.0</span>
         </div>
       </SidebarFooter>
     </Sidebar>

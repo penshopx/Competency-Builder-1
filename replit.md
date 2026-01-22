@@ -1,16 +1,26 @@
-# E-Course Builder - Ekosistem Kompetensi SMAP & PANCEK
+# E-Course Builder - Platform Pembelajaran Berbasis Kompetensi
 
 ## Overview
 
-E-Course Builder is a competency-based learning management platform designed for Indonesian organizations. It enables the creation and management of e-courses tied to competency frameworks (SMAP - Strategic Management & Analytical Planning, and PANCEK - Planning, Action, Negotiation, Communication, Execution). The platform tracks participant progress, manages evidence-based assessments, and generates competency passports for talent development decisions.
+E-Course Builder is a generic competency-based learning management platform designed for Indonesian organizations. It enables the creation and management of e-courses tied to any competency framework. SMAP and PANCEK are included as sample frameworks, but organizations can create their own custom competency clusters and units.
 
 Key features:
-- Competency cluster and unit management (SMAP & PANCEK frameworks)
-- E-Course builder with lesson types (orientation, context, microlearning, practice, assessment, reflection)
-- Participant tracking with competency level progression (L1-L4)
-- Evidence-based assessment system
-- Competency passport generation
-- Dashboard with heatmap analytics
+- **Generic Competency Framework**: Create custom competency clusters and units (SMAP & PANCEK as samples)
+- **E-Course builder**: 6-step template (Orientation, Context, Microlearning, Practice, Assessment, Reflection)
+- **4-Level Progression**: L1 (Awareness) → L2 (Application) → L3 (Mastery) → L4 (Strategic)
+- **Evidence-based Assessment**: Track and document competency evidence
+- **Competency Passport**: Generate competency documentation for talent decisions
+- **Dashboard Analytics**: Heatmap visualization of participant progress
+- **Landing Page**: Public landing page at `/` with full app at `/app`
+
+## Routes
+
+- `/` - Landing page (public)
+- `/app` - Dashboard (main application)
+- `/app/competencies` - Competency cluster and unit management
+- `/app/courses` - E-Course Builder with template
+- `/app/participants` - Participant management
+- `/app/passport` - Competency Passport
 
 ## User Preferences
 
