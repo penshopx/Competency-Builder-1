@@ -1,7 +1,21 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertParticipantSchema, insertEvidenceSchema, insertCourseSchema, insertClusterSchema, insertUnitSchema } from "@shared/schema";
+import { 
+  insertParticipantSchema, 
+  insertEvidenceSchema, 
+  insertCourseSchema, 
+  insertClusterSchema, 
+  insertUnitSchema,
+  insertLearningPathSchema,
+  insertQuizSchema,
+  insertCertificateSchema,
+  insertAssessorSchema,
+  insertAssesseeSchema,
+  insertSchemeSchema,
+  insertScheduleSchema,
+  insertPortfolioSchema
+} from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(
@@ -295,6 +309,503 @@ export async function registerRoutes(
       res.json(heatmap);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch heatmap data" });
+    }
+  });
+
+  // ============ LEARNING PATHS ============
+  app.get("/api/learning-paths", async (req, res) => {
+    try {
+      const paths = await storage.getLearningPaths();
+      res.json(paths);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch learning paths" });
+    }
+  });
+
+  app.get("/api/learning-paths/:id", async (req, res) => {
+    try {
+      const path = await storage.getLearningPath(req.params.id);
+      if (!path) {
+        return res.status(404).json({ message: "Learning path not found" });
+      }
+      res.json(path);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch learning path" });
+    }
+  });
+
+  app.post("/api/learning-paths", async (req, res) => {
+    try {
+      const data = insertLearningPathSchema.parse(req.body);
+      const path = await storage.createLearningPath(data);
+      res.status(201).json(path);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create learning path" });
+    }
+  });
+
+  app.patch("/api/learning-paths/:id", async (req, res) => {
+    try {
+      const path = await storage.updateLearningPath(req.params.id, req.body);
+      if (!path) {
+        return res.status(404).json({ message: "Learning path not found" });
+      }
+      res.json(path);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update learning path" });
+    }
+  });
+
+  app.delete("/api/learning-paths/:id", async (req, res) => {
+    try {
+      const success = await storage.deleteLearningPath(req.params.id);
+      if (!success) {
+        return res.status(404).json({ message: "Learning path not found" });
+      }
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete learning path" });
+    }
+  });
+
+  // ============ ENROLLMENTS ============
+  app.get("/api/enrollments", async (req, res) => {
+    try {
+      const participantId = req.query.participantId as string | undefined;
+      if (participantId) {
+        const enrollments = await storage.getEnrollmentsByParticipant(participantId);
+        return res.json(enrollments);
+      }
+      const enrollments = await storage.getEnrollments();
+      res.json(enrollments);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch enrollments" });
+    }
+  });
+
+  app.post("/api/enrollments", async (req, res) => {
+    try {
+      const { participantId, courseId, learningPathId } = req.body;
+      const enrollment = await storage.createEnrollment(participantId, courseId, learningPathId);
+      res.status(201).json(enrollment);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to create enrollment" });
+    }
+  });
+
+  app.patch("/api/enrollments/:id/progress", async (req, res) => {
+    try {
+      const { progress, status } = req.body;
+      const enrollment = await storage.updateEnrollmentProgress(req.params.id, progress, status);
+      if (!enrollment) {
+        return res.status(404).json({ message: "Enrollment not found" });
+      }
+      res.json(enrollment);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update enrollment" });
+    }
+  });
+
+  // ============ QUIZZES ============
+  app.get("/api/quizzes", async (req, res) => {
+    try {
+      const courseId = req.query.courseId as string | undefined;
+      if (courseId) {
+        const quizzes = await storage.getQuizzesByCourse(courseId);
+        return res.json(quizzes);
+      }
+      const quizzes = await storage.getQuizzes();
+      res.json(quizzes);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch quizzes" });
+    }
+  });
+
+  app.get("/api/quizzes/:id", async (req, res) => {
+    try {
+      const quiz = await storage.getQuiz(req.params.id);
+      if (!quiz) {
+        return res.status(404).json({ message: "Quiz not found" });
+      }
+      res.json(quiz);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch quiz" });
+    }
+  });
+
+  app.post("/api/quizzes", async (req, res) => {
+    try {
+      const data = insertQuizSchema.parse(req.body);
+      const quiz = await storage.createQuiz({ ...data, questions: req.body.questions || [] });
+      res.status(201).json(quiz);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create quiz" });
+    }
+  });
+
+  app.delete("/api/quizzes/:id", async (req, res) => {
+    try {
+      const success = await storage.deleteQuiz(req.params.id);
+      if (!success) {
+        return res.status(404).json({ message: "Quiz not found" });
+      }
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete quiz" });
+    }
+  });
+
+  // ============ QUIZ ATTEMPTS ============
+  app.get("/api/quizzes/:quizId/attempts", async (req, res) => {
+    try {
+      const attempts = await storage.getQuizAttempts(req.params.quizId);
+      res.json(attempts);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch quiz attempts" });
+    }
+  });
+
+  app.get("/api/participants/:participantId/quiz-attempts", async (req, res) => {
+    try {
+      const attempts = await storage.getQuizAttemptsByParticipant(req.params.participantId);
+      res.json(attempts);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch quiz attempts" });
+    }
+  });
+
+  app.post("/api/quizzes/:quizId/attempts", async (req, res) => {
+    try {
+      const attempt = await storage.createQuizAttempt({
+        quizId: req.params.quizId,
+        ...req.body
+      });
+      res.status(201).json(attempt);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to create quiz attempt" });
+    }
+  });
+
+  // ============ CERTIFICATES ============
+  app.get("/api/certificates", async (req, res) => {
+    try {
+      const participantId = req.query.participantId as string | undefined;
+      if (participantId) {
+        const certificates = await storage.getCertificatesByParticipant(participantId);
+        return res.json(certificates);
+      }
+      const certificates = await storage.getCertificates();
+      res.json(certificates);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch certificates" });
+    }
+  });
+
+  app.get("/api/certificates/:id", async (req, res) => {
+    try {
+      const certificate = await storage.getCertificate(req.params.id);
+      if (!certificate) {
+        return res.status(404).json({ message: "Certificate not found" });
+      }
+      res.json(certificate);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch certificate" });
+    }
+  });
+
+  app.post("/api/certificates", async (req, res) => {
+    try {
+      const data = insertCertificateSchema.parse(req.body);
+      const certificate = await storage.createCertificate(data);
+      res.status(201).json(certificate);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create certificate" });
+    }
+  });
+
+  app.get("/api/certificates/verify/:certificateNumber", async (req, res) => {
+    try {
+      const certificate = await storage.verifyCertificate(req.params.certificateNumber);
+      if (!certificate) {
+        return res.status(404).json({ message: "Certificate not found", valid: false });
+      }
+      res.json({ valid: true, certificate });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to verify certificate" });
+    }
+  });
+
+  // ============ ASSESSORS ============
+  app.get("/api/assessors", async (req, res) => {
+    try {
+      const assessors = await storage.getAssessors();
+      res.json(assessors);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch assessors" });
+    }
+  });
+
+  app.get("/api/assessors/:id", async (req, res) => {
+    try {
+      const assessor = await storage.getAssessor(req.params.id);
+      if (!assessor) {
+        return res.status(404).json({ message: "Assessor not found" });
+      }
+      res.json(assessor);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch assessor" });
+    }
+  });
+
+  app.post("/api/assessors", async (req, res) => {
+    try {
+      const data = insertAssessorSchema.parse(req.body);
+      const assessor = await storage.createAssessor(data);
+      res.status(201).json(assessor);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create assessor" });
+    }
+  });
+
+  app.patch("/api/assessors/:id", async (req, res) => {
+    try {
+      const assessor = await storage.updateAssessor(req.params.id, req.body);
+      if (!assessor) {
+        return res.status(404).json({ message: "Assessor not found" });
+      }
+      res.json(assessor);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update assessor" });
+    }
+  });
+
+  app.delete("/api/assessors/:id", async (req, res) => {
+    try {
+      const success = await storage.deleteAssessor(req.params.id);
+      if (!success) {
+        return res.status(404).json({ message: "Assessor not found" });
+      }
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete assessor" });
+    }
+  });
+
+  // ============ ASSESSEES ============
+  app.get("/api/assessees", async (req, res) => {
+    try {
+      const assessees = await storage.getAssessees();
+      res.json(assessees);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch assessees" });
+    }
+  });
+
+  app.get("/api/assessees/:id", async (req, res) => {
+    try {
+      const assessee = await storage.getAssessee(req.params.id);
+      if (!assessee) {
+        return res.status(404).json({ message: "Assessee not found" });
+      }
+      res.json(assessee);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch assessee" });
+    }
+  });
+
+  app.post("/api/assessees", async (req, res) => {
+    try {
+      const data = insertAssesseeSchema.parse(req.body);
+      const assessee = await storage.createAssessee(data);
+      res.status(201).json(assessee);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create assessee" });
+    }
+  });
+
+  app.patch("/api/assessees/:id/status", async (req, res) => {
+    try {
+      const assessee = await storage.updateAssesseeStatus(req.params.id, req.body.status);
+      if (!assessee) {
+        return res.status(404).json({ message: "Assessee not found" });
+      }
+      res.json(assessee);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update assessee status" });
+    }
+  });
+
+  // ============ COMPETENCY SCHEMES ============
+  app.get("/api/schemes", async (req, res) => {
+    try {
+      const schemes = await storage.getSchemes();
+      res.json(schemes);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch schemes" });
+    }
+  });
+
+  app.get("/api/schemes/:id", async (req, res) => {
+    try {
+      const scheme = await storage.getScheme(req.params.id);
+      if (!scheme) {
+        return res.status(404).json({ message: "Scheme not found" });
+      }
+      res.json(scheme);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch scheme" });
+    }
+  });
+
+  app.post("/api/schemes", async (req, res) => {
+    try {
+      const data = insertSchemeSchema.parse(req.body);
+      const scheme = await storage.createScheme(data);
+      res.status(201).json(scheme);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create scheme" });
+    }
+  });
+
+  // ============ ASSESSMENT SCHEDULES ============
+  app.get("/api/schedules", async (req, res) => {
+    try {
+      const schedules = await storage.getSchedules();
+      res.json(schedules);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch schedules" });
+    }
+  });
+
+  app.get("/api/schedules/:id", async (req, res) => {
+    try {
+      const schedule = await storage.getSchedule(req.params.id);
+      if (!schedule) {
+        return res.status(404).json({ message: "Schedule not found" });
+      }
+      res.json(schedule);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch schedule" });
+    }
+  });
+
+  app.post("/api/schedules", async (req, res) => {
+    try {
+      const data = insertScheduleSchema.parse(req.body);
+      const schedule = await storage.createSchedule(data);
+      res.status(201).json(schedule);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create schedule" });
+    }
+  });
+
+  app.patch("/api/schedules/:id/status", async (req, res) => {
+    try {
+      const schedule = await storage.updateScheduleStatus(req.params.id, req.body.status);
+      if (!schedule) {
+        return res.status(404).json({ message: "Schedule not found" });
+      }
+      res.json(schedule);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update schedule status" });
+    }
+  });
+
+  // ============ PORTFOLIO ============
+  app.get("/api/assessees/:assesseeId/portfolio", async (req, res) => {
+    try {
+      const items = await storage.getPortfolioItems(req.params.assesseeId);
+      res.json(items);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch portfolio items" });
+    }
+  });
+
+  app.post("/api/portfolio", async (req, res) => {
+    try {
+      const data = insertPortfolioSchema.parse(req.body);
+      const item = await storage.createPortfolioItem(data);
+      res.status(201).json(item);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create portfolio item" });
+    }
+  });
+
+  app.patch("/api/portfolio/:id/status", async (req, res) => {
+    try {
+      const { status, feedback } = req.body;
+      const item = await storage.updatePortfolioStatus(req.params.id, status, feedback);
+      if (!item) {
+        return res.status(404).json({ message: "Portfolio item not found" });
+      }
+      res.json(item);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update portfolio status" });
+    }
+  });
+
+  // ============ CERTIFICATION RESULTS ============
+  app.get("/api/certification-results", async (req, res) => {
+    try {
+      const results = await storage.getCertificationResults();
+      res.json(results);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch certification results" });
+    }
+  });
+
+  app.post("/api/certification-results", async (req, res) => {
+    try {
+      const result = await storage.createCertificationResult(req.body);
+      res.status(201).json(result);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to create certification result" });
+    }
+  });
+
+  // ============ LSP ORGANIZATIONS ============
+  app.get("/api/lsp-organizations", async (req, res) => {
+    try {
+      const orgs = await storage.getLSPOrganizations();
+      res.json(orgs);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch LSP organizations" });
+    }
+  });
+
+  app.get("/api/lsp-organizations/:id", async (req, res) => {
+    try {
+      const org = await storage.getLSPOrganization(req.params.id);
+      if (!org) {
+        return res.status(404).json({ message: "LSP organization not found" });
+      }
+      res.json(org);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch LSP organization" });
     }
   });
 
