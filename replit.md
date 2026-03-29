@@ -13,6 +13,13 @@ Key features:
 - **Dashboard Analytics**: Heatmap visualization of participant progress with quick access cards
 - **Landing Page**: Public landing page at `/` with LMS and LSP feature showcase
 
+**Power Features (Latest):**
+- **Global Search**: Real-time search across participants, courses, and competency units (Ctrl+K shortcut) — `GET /api/search?q=...`
+- **Notification Center**: Bell icon with badge showing unread notifications, mark read/all-read — `GET /api/notifications`, `PATCH /api/notifications/:id/read`
+- **Analytics Page** (`/app/analytics`): Rich recharts visualizations — monthly trend (line), cluster level distribution (bar), course by level (pie), gap analysis (bar), radar chart — `GET /api/analytics`
+- **CSV Export**: Export participants list with competency stats to CSV file
+- **Page Title Breadcrumb**: Contextual page title shown in the header on all pages
+
 **LMS Features (New):**
 - **Learning Paths**: Create learning paths with prerequisites, difficulty levels, and progress tracking
 - **Quiz Engine**: Multiple question types (pilihan ganda, benar/salah, esai) with scoring

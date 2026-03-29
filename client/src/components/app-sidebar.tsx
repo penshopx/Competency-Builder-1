@@ -9,7 +9,8 @@ import {
   Route,
   ClipboardCheck,
   FileCheck,
-  FileQuestion
+  FileQuestion,
+  BarChart3
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import {
@@ -30,6 +31,11 @@ const mainMenu = [
     title: "Dashboard",
     url: "/app",
     icon: LayoutDashboard,
+  },
+  {
+    title: "Analitik & Laporan",
+    url: "/app/analytics",
+    icon: BarChart3,
   },
   {
     title: "Kompetensi",

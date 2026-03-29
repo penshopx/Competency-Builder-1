@@ -39,7 +39,8 @@ import type {
   InsertPortfolio,
   CertificationResult,
   Badge,
-  Achievement
+  Achievement,
+  Notification
 } from "@shared/schema";
 
 // Sample data imports (replicated from client for server use)
@@ -410,6 +411,23 @@ export interface IStorage {
   // LSP - Organizations
   getLSPOrganizations(): Promise<LSPOrganization[]>;
   getLSPOrganization(id: string): Promise<LSPOrganization | undefined>;
+
+  // Notifications
+  getNotifications(): Promise<Notification[]>;
+  markNotificationRead(id: string): Promise<Notification | undefined>;
+  markAllNotificationsRead(): Promise<void>;
+
+  // Search
+  searchAll(query: string): Promise<{ participants: Participant[]; courses: ECourse[]; units: UnitCompetency[] }>;
+
+  // Analytics
+  getAnalyticsData(): Promise<{
+    monthlyTrend: { month: string; completions: number; enrollments: number }[];
+    levelDistributionByCluster: { cluster: string; L1: number; L2: number; L3: number; L4: number }[];
+    courseCompletionByLevel: { level: string; count: number }[];
+    topGapUnits: { name: string; gap: number; code: string }[];
+    participantsByUnit: { unit: string; count: number }[];
+  }>;
 }
 
 export class MemStorage implements IStorage {
@@ -429,6 +447,7 @@ export class MemStorage implements IStorage {
   private portfolioItems: Map<string, PortfolioItem>;
   private certificationResults: Map<string, CertificationResult>;
   private lspOrganizations: Map<string, LSPOrganization>;
+  private notifications: Map<string, Notification>;
 
   constructor() {
     this.clusters = new Map(competencyClusters.map(c => [c.id, c]));
@@ -447,8 +466,82 @@ export class MemStorage implements IStorage {
     this.portfolioItems = new Map();
     this.certificationResults = new Map();
     this.lspOrganizations = new Map();
+    this.notifications = new Map();
     
     this.initializeSampleLMSData();
+    this.initializeSampleNotifications();
+  }
+
+  private initializeSampleNotifications() {
+    const sampleNotifications: Notification[] = [
+      {
+        id: "notif-001",
+        userId: "system",
+        type: "warning",
+        category: "assessment",
+        title: "Gap Kompetensi Terdeteksi",
+        message: "3 peserta memiliki gap kompetensi kritis di unit SMAP-01. Segera jadwalkan pelatihan.",
+        link: "/app/competencies",
+        isRead: false,
+        createdAt: new Date(Date.now() - 1000 * 60 * 30).toISOString()
+      },
+      {
+        id: "notif-002",
+        userId: "system",
+        type: "success",
+        category: "certificate",
+        title: "Sertifikat Baru Diterbitkan",
+        message: "Sertifikat kompetensi berhasil diterbitkan untuk Budi Santoso pada skema SMAP.",
+        link: "/app/certificates",
+        isRead: false,
+        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString()
+      },
+      {
+        id: "notif-003",
+        userId: "system",
+        type: "info",
+        category: "schedule",
+        title: "Jadwal Asesmen Mendatang",
+        message: "Asesmen dijadwalkan besok pukul 09:00 WIB untuk 2 asesi. Pastikan asesor siap.",
+        link: "/app/assessment",
+        isRead: false,
+        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString()
+      },
+      {
+        id: "notif-004",
+        userId: "system",
+        type: "info",
+        category: "course",
+        title: "E-Course Baru Ditambahkan",
+        message: "Kursus 'Pengambilan Keputusan Berbasis Data L2' telah dipublikasikan dan siap diakses peserta.",
+        link: "/app/courses",
+        isRead: true,
+        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString()
+      },
+      {
+        id: "notif-005",
+        userId: "system",
+        type: "warning",
+        category: "certificate",
+        title: "Sertifikat Hampir Kadaluarsa",
+        message: "2 sertifikat asesor akan kadaluarsa dalam 30 hari. Segera perbarui masa berlaku.",
+        link: "/app/assessment",
+        isRead: true,
+        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString()
+      },
+      {
+        id: "notif-006",
+        userId: "system",
+        type: "success",
+        category: "assessment",
+        title: "Asesi Lulus Uji Kompetensi",
+        message: "Siti Rahayu dinyatakan KOMPETEN pada skema SKM-SMAP-01. Sertifikat dapat diterbitkan.",
+        link: "/app/assessment",
+        isRead: true,
+        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 72).toISOString()
+      }
+    ];
+    sampleNotifications.forEach(n => this.notifications.set(n.id, n));
   }
 
   private initializeSampleLMSData() {
@@ -1195,6 +1288,110 @@ export class MemStorage implements IStorage {
 
   async getLSPOrganization(id: string): Promise<LSPOrganization | undefined> {
     return this.lspOrganizations.get(id);
+  }
+
+  // Notifications
+  async getNotifications(): Promise<Notification[]> {
+    return Array.from(this.notifications.values()).sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+  }
+
+  async markNotificationRead(id: string): Promise<Notification | undefined> {
+    const notif = this.notifications.get(id);
+    if (!notif) return undefined;
+    notif.isRead = true;
+    this.notifications.set(id, notif);
+    return notif;
+  }
+
+  async markAllNotificationsRead(): Promise<void> {
+    for (const [id, notif] of this.notifications.entries()) {
+      notif.isRead = true;
+      this.notifications.set(id, notif);
+    }
+  }
+
+  // Search
+  async searchAll(query: string): Promise<{ participants: Participant[]; courses: ECourse[]; units: UnitCompetency[] }> {
+    const q = query.toLowerCase().trim();
+    if (!q) return { participants: [], courses: [], units: [] };
+
+    const participants = Array.from(this.participants.values()).filter(p =>
+      p.name.toLowerCase().includes(q) ||
+      p.nip.toLowerCase().includes(q) ||
+      p.position.toLowerCase().includes(q) ||
+      p.unit.toLowerCase().includes(q) ||
+      p.email.toLowerCase().includes(q)
+    ).slice(0, 5);
+
+    const courses = Array.from(this.courses.values()).filter(c =>
+      c.title.toLowerCase().includes(q) ||
+      c.description.toLowerCase().includes(q)
+    ).slice(0, 5);
+
+    const units = Array.from(this.units.values()).filter(u =>
+      u.name.toLowerCase().includes(q) ||
+      u.code.toLowerCase().includes(q) ||
+      u.description.toLowerCase().includes(q)
+    ).slice(0, 5);
+
+    return { participants, courses, units };
+  }
+
+  // Analytics
+  async getAnalyticsData() {
+    const participants = Array.from(this.participants.values());
+    const courses = Array.from(this.courses.values());
+    const units = Array.from(this.units.values());
+    const clusters = Array.from(this.clusters.values());
+
+    // Monthly trend (last 6 months, simulated)
+    const now = new Date();
+    const monthlyTrend = Array.from({ length: 6 }, (_, i) => {
+      const d = new Date(now.getFullYear(), now.getMonth() - 5 + i, 1);
+      const monthName = d.toLocaleDateString('id-ID', { month: 'short', year: '2-digit' });
+      const baseCompleted = Math.floor(participants.length * 0.3) + i * 2;
+      const baseEnrolled = Math.floor(participants.length * 0.5) + i * 3;
+      return { month: monthName, completions: baseCompleted, enrollments: baseEnrolled };
+    });
+
+    // Level distribution by cluster
+    const levelDistributionByCluster = clusters.map(cluster => {
+      const clusterUnits = units.filter(u => u.clusterId === cluster.id);
+      const allComps = participants.flatMap(p =>
+        p.competencies.filter(c => clusterUnits.some(u => u.id === c.unitId))
+      );
+      return {
+        cluster: cluster.code,
+        L1: allComps.filter(c => c.currentLevel === 'L1').length,
+        L2: allComps.filter(c => c.currentLevel === 'L2').length,
+        L3: allComps.filter(c => c.currentLevel === 'L3').length,
+        L4: allComps.filter(c => c.currentLevel === 'L4').length,
+      };
+    });
+
+    // Course completion by target level
+    const courseCompletionByLevel = ['L1', 'L2', 'L3', 'L4'].map(level => ({
+      level,
+      count: courses.filter(c => c.targetLevel === level).length
+    }));
+
+    // Top gap units
+    const topGapUnits = units.map(unit => {
+      const gaps = participants.flatMap(p =>
+        p.competencies.filter(c => c.unitId === unit.id && c.status === 'gap')
+      ).length;
+      return { name: unit.name, gap: gaps, code: unit.code };
+    }).sort((a, b) => b.gap - a.gap).slice(0, 5);
+
+    // Participants by unit (top 6)
+    const participantsByUnit = units.map(unit => ({
+      unit: unit.code,
+      count: participants.flatMap(p => p.competencies.filter(c => c.unitId === unit.id)).length
+    })).sort((a, b) => b.count - a.count).slice(0, 6);
+
+    return { monthlyTrend, levelDistributionByCluster, courseCompletionByLevel, topGapUnits, participantsByUnit };
   }
 }
 

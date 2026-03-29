@@ -809,5 +809,55 @@ export async function registerRoutes(
     }
   });
 
+  // ============ NOTIFICATIONS ============
+  app.get("/api/notifications", async (req, res) => {
+    try {
+      const notifications = await storage.getNotifications();
+      res.json(notifications);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch notifications" });
+    }
+  });
+
+  app.patch("/api/notifications/read-all", async (req, res) => {
+    try {
+      await storage.markAllNotificationsRead();
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to mark all notifications as read" });
+    }
+  });
+
+  app.patch("/api/notifications/:id/read", async (req, res) => {
+    try {
+      const notif = await storage.markNotificationRead(req.params.id);
+      if (!notif) return res.status(404).json({ message: "Notification not found" });
+      res.json(notif);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to mark notification as read" });
+    }
+  });
+
+  // ============ SEARCH ============
+  app.get("/api/search", async (req, res) => {
+    try {
+      const query = (req.query.q as string) || "";
+      const results = await storage.searchAll(query);
+      res.json(results);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to perform search" });
+    }
+  });
+
+  // ============ ANALYTICS ============
+  app.get("/api/analytics", async (req, res) => {
+    try {
+      const data = await storage.getAnalyticsData();
+      res.json(data);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch analytics data" });
+    }
+  });
+
   return httpServer;
 }

@@ -24,7 +24,8 @@ import {
   TrendingUp,
   BookOpen,
   Award,
-  Eye
+  Eye,
+  Download
 } from "lucide-react";
 import { Link } from "wouter";
 import { getLevelColor, getStatusColor, getStatusLabel } from "@/lib/data";
@@ -319,6 +320,26 @@ function ParticipantRowSkeleton() {
   );
 }
 
+function exportParticipantsCSV(participants: Participant[]) {
+  const headers = ["NIP", "Nama", "Email", "Jabatan", "Unit Kerja", "Total Kompetensi", "Gap", "Tercapai", "Rata-rata Level"];
+  const rows = participants.map(p => {
+    const gapCount = p.competencies.filter(c => c.status === "gap").length;
+    const achievedCount = p.competencies.filter(c => c.status === "achieved").length;
+    const avgLevel = p.competencies.length
+      ? (p.competencies.reduce((s, c) => s + parseInt(c.currentLevel.replace("L", "")), 0) / p.competencies.length).toFixed(2)
+      : "0";
+    return [p.nip, p.name, p.email, p.position, p.unit, p.competencies.length, gapCount, achievedCount, avgLevel];
+  });
+  const csv = [headers, ...rows].map(r => r.join(",")).join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `peserta-${new Date().toISOString().split("T")[0]}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export default function Participants() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -345,7 +366,17 @@ export default function Participants() {
           <h1 className="text-2xl font-bold">Peserta</h1>
           <p className="text-muted-foreground">Kelola peserta dalam ekosistem kompetensi</p>
         </div>
-        <Dialog open={showCreateForm} onOpenChange={setShowCreateForm}>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={() => participants && exportParticipantsCSV(participants)}
+            disabled={!participants?.length}
+            data-testid="button-export-csv"
+          >
+            <Download className="h-4 w-4 mr-1" />
+            Export CSV
+          </Button>
+          <Dialog open={showCreateForm} onOpenChange={setShowCreateForm}>
           <DialogTrigger asChild>
             <Button data-testid="button-add-participant">
               <Plus className="h-4 w-4 mr-1" />
@@ -362,6 +393,7 @@ export default function Participants() {
             <CreateParticipantForm onClose={() => setShowCreateForm(false)} />
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       <Card>
